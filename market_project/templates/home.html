@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trading Platform</title>
+</head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<body>
+    <h1>Indices Prices</h1>
+    <ul>
+        <p>Nifty 50: <span id="nifty50-price">Loading...</span></p>
+        <p>Nifty Bank: <span id="niftybank-price">Loading...</span></p>
+        <p>Sensex: <span id="sensex-price">Loading...</span></p>
+
+    </ul>
+
+    <h2>Place an Order</h2>
+   <form method="post">
+    {% csrf_token %}
+    <label for="symbol">Symbol:</label>
+    <input type="text" id="symbol" name="symbol" required>
+    <br>
+    
+    <label for="exchange">Exchange:</label>
+    <select id="exchange" name="exchange" required>
+        <option value="NSE">NSE</option>
+        <option value="BSE">BSE</option>
+    </select>
+    <br>
+
+    <label for="buy_or_sell">Buy/Sell:</label>
+    <select id="buy_or_sell" name="buy_or_sell" required>
+        <option value="B">Buy</option>
+        <option value="S">Sell</option>
+    </select>
+    <br>
+
+    <label for="product_type">Order Type:</label>
+    <select id="product_type" name="product_type" required>
+        <option value="C">Delivery</option>
+        <option value="I">Intraday</option>
+    </select>
+    <br>
+
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" name="quantity" required>
+    <br>
+
+    <label for="order_type">Order Type:</label>
+    <select id="order_type" name="order_type" required>
+        <option value="MKT">Market Order</option>
+        <option value="LMT">Limit Order</option>
+    </select>
+    <br>
+
+    <label for="price">Price (for Limit Order):</label>
+    <input type="text" id="price" name="price">
+    <br>
+    
+    <button type="submit">Place Order</button>
+</form>
+
+  <h1>Recent Orders</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Quantity</th>
+                <th>Order Type</th>
+                <th>Price</th>
+                <th>Buy/Sell</th>
+                <th>Exchange</th>
+                <th>Product Type</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in page_obj %}
+                <tr>
+                    <td>{{ order.symbol }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>{{ order.order_type }}</td>
+                    <td>{{ order.price }}</td>
+                    <td>{{ order.buy_or_sell }}</td>
+                    <td>{{ order.exchange }}</td>
+                    <td>{{ order.product_type }}</td>
+                    <td>{{ order.created_at }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8">No recent orders found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+    </table>
+</body>
+
+<script>
+    function updatePrices() {
+        $.ajax({
+            url: "{% url 'get_indices_prices' %}",
+            type: "GET",
+            success: function(data) {
+                $('#nifty50-price').text(data['Nifty 50']);
+                $('#niftybank-price').text(data['Nifty Bank']);
+                $('#sensex-price').text(data['Sensex']);
+            }
+        });
+    }
+
+    // Update prices every 2 seconds
+    setInterval(updatePrices, 10000);
+
+    // Initial call to populate the data immediately when the page loads
+    updatePrices();
+</script>
+</html>
